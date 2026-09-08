@@ -68,8 +68,12 @@ public class SecurityConfig {
                         // the point: nobody signs in just to find out the clinic is full.
                         .requestMatchers(HttpMethod.GET, "/api/appointments/available-slots").permitAll()
 
-                        // Admin surface: role-gated first, before the narrower authenticated
-                        // rules below could otherwise shadow it by accident.
+                        // The admin screens are part of the portfolio demo, so any signed-in
+                        // visitor can look around read-only — only the mutating verbs (create,
+                        // edit, delete, change an appointment's status) require the
+                        // clinic-admin role. Ordered before the narrower authenticated rules
+                        // below so they don't shadow this by accident.
+                        .requestMatchers(HttpMethod.GET, "/api/admin/**").authenticated()
                         .requestMatchers("/api/admin/**").hasRole("clinic-admin")
 
                         // Booking a slot and reading your own appointment history both need
