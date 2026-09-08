@@ -1,0 +1,41 @@
+# Production stack for the dermatology clinic booking site. No Mongo/Keycloak
+# of its own -- joins the sibling `fanvote` project's own Docker network
+# directly (external) to reach its shared Mongo container by name. No BTCPay:
+# this project has no payments.
+#
+#   docker compose -f docker-compose.prod.yml --env-file .env.prod up -d --build
+#
+# Requires the fanvote stack to already be running (its network,
+# `fanvote_fanvote`, must exist) and its Mongo credentials (MONGO_USER,
+# MONGO_PASSWORD) copied into this project's own .env.prod -- see README.md.
+
+services:
+  backend:
+    build:
+      context: ./backend
+    container_name: clinic-backend
+    restart: unless-stopped
+    environment:
+      SPRING_DATA_MONGODB_URI: mongodb://${MONGO_USER}:${MONGO_PASSWORD}@mongo:27017/${MONGO_DB:-clinic}?authSource=admin
+      SPRING_DATA_MONGODB_DATABASE: ${MONGO_DB:-clinic}
+      KEYCLOAK_ISSUER_URI: https://auth.adriandragota.com/realms/clinic
+      CORS_ALLOWED_ORIGIN: https://clinica.adriandragota.com
+      SERVER_PORT: 8081
+      JAVA_TOOL_OPTIONS: "-XX:MaxRAMPercentage=70"
+    mem_limit: 512m
+    networks: [fanvote_fanvote]
+
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        API_URL: https://clinica.adriandragota.com
+        KEYCLOAK_URL: https://auth.adriandragota.com
+    container_name: clinic-frontend
+    restart: unless-stopped
+    mem_limit: 64m
+    networks: [fanvote_fanvote]
+
+networks:
+  fanvote_fanvote:
+    external: true
