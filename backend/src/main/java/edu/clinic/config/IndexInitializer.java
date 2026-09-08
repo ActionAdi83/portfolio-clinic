@@ -10,8 +10,6 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.index.Index;
-import org.springframework.data.mongodb.core.index.PartialIndexFilter;
-import org.springframework.data.mongodb.core.query.Criteria;
 
 /**
  * Creates the uniqueness constraints this service relies on.
@@ -20,9 +18,18 @@ import org.springframework.data.mongodb.core.query.Criteria;
  * are declared explicitly at startup rather than assumed from an {@code @Indexed}
  * annotation — see fanvote-backend's PaymentIndexInitializer, which this mirrors.
  *
- * The appointment index is partial (only non-cancelled appointments) rather than a
- * plain unique index on (date, startTime): a plain unique index would forbid ever
- * booking a slot again after the appointment that first held it was cancelled.
+ * The appointment index is a plain compound index on (date, startTime), not unique.
+ * A unique index excluding cancelled appointments needs a MongoDB partial index,
+ * and partialFilterExpression only supports equality, $exists, $gt/$gte/$lt/$lte,
+ * $type and a top-level $and of those — {@code status != CANCELLED} needs $ne,
+ * which MongoDB rejects at index-creation time ("Expression not supported in
+ * partial index: $not"). Expressing this properly means adding a field like
+ * {@code cancelledAt} that only exists once cancelled and filtering on
+ * {@code $exists: false} — a real entity change, not just an index tweak.
+ * Until that lands, double-booking protection is the service-level
+ * check-then-insert in AppointmentServiceImpl, which is not atomic under true
+ * concurrent requests — an acceptable gap for this project's realistic traffic,
+ * but worth revisiting before this pattern is copied somewhere with real load.
  */
 @Configuration
 public class IndexInitializer {
@@ -35,9 +42,7 @@ public class IndexInitializer {
             try {
                 mongoTemplate.indexOps(Appointment.class).ensureIndex(new Index()
                         .on("date", Sort.Direction.ASC)
-                        .on("startTime", Sort.Direction.ASC)
-                        .unique()
-                        .partial(PartialIndexFilter.of(Criteria.where("status").ne("CANCELLED"))));
+                        .on("startTime", Sort.Direction.ASC));
 
                 // Only seven of these ever exist (one per weekday); this guards against
                 // ScheduleSeedInitializer or a future admin write ever accidentally
