@@ -1,0 +1,34 @@
+<div class="container">
+  <h1>Programările mele</h1>
+
+  @if (loading()) {
+    <p class="muted">Se încarcă...</p>
+  } @else if (error()) {
+    <p class="error-text">{{ error() }}</p>
+  } @else if (appointments().length === 0) {
+    <p class="muted">Nu ai nicio programare încă.</p>
+  } @else {
+    <div class="appointment-list">
+      @for (appointment of appointments(); track appointment.id) {
+        <div class="card appointment-row">
+          <div>
+            <h3>{{ appointment.serviceTitle }}</h3>
+            <p class="muted">
+              {{ appointment.date }} · {{ appointment.startTime.slice(0, 5) }} - {{ appointment.endTime.slice(0, 5) }}
+            </p>
+          </div>
+          <div class="appointment-actions">
+            <span class="badge" [class]="'badge-' + appointment.status.toLowerCase()">{{ appointment.status }}</span>
+            @if (canCancel(appointment)) {
+              <button type="button" class="btn btn-danger"
+                      [disabled]="cancellingId() === appointment.id"
+                      (click)="cancel(appointment)">
+                {{ cancellingId() === appointment.id ? 'Se anulează...' : 'Anulează' }}
+              </button>
+            }
+          </div>
+        </div>
+      }
+    </div>
+  }
+</div>

@@ -1,0 +1,186 @@
+<div class="container">
+  <h1>Panou de administrare</h1>
+
+  <div class="tabs">
+    <button type="button" class="tab" [class.active]="tab() === 'services'" (click)="setTab('services')">Servicii</button>
+    <button type="button" class="tab" [class.active]="tab() === 'schedule'" (click)="setTab('schedule')">Program săptămânal</button>
+    <button type="button" class="tab" [class.active]="tab() === 'appointments'" (click)="setTab('appointments')">Programări</button>
+  </div>
+
+  <!-- ================= SERVICES ================= -->
+  @if (tab() === 'services') {
+    <div class="tab-panel">
+      @if (servicesError()) {
+        <p class="error-text">{{ servicesError() }}</p>
+      }
+
+      <div class="admin-layout">
+        <div class="card">
+          <h3>{{ editingService.id ? 'Editează serviciul' : 'Serviciu nou' }}</h3>
+          <div class="form-row">
+            <label for="svc-title">Titlu</label>
+            <input id="svc-title" type="text" [(ngModel)]="editingService.title" name="title">
+          </div>
+          <div class="form-row">
+            <label for="svc-desc">Descriere</label>
+            <textarea id="svc-desc" rows="3" [(ngModel)]="editingService.description" name="description"></textarea>
+          </div>
+          <div class="form-row">
+            <label for="svc-image">URL imagine (opțional)</label>
+            <input id="svc-image" type="text" [(ngModel)]="editingService.imageUrl" name="imageUrl">
+          </div>
+          <div class="form-row">
+            <label for="svc-duration">Durată (minute)</label>
+            <input id="svc-duration" type="number" min="5" step="5" [(ngModel)]="editingService.durationMinutes" name="durationMinutes">
+          </div>
+          <div class="form-row checkbox-row">
+            <label class="inline">
+              <input type="checkbox" [(ngModel)]="editingService.active" name="active">
+              Activ (vizibil public)
+            </label>
+          </div>
+          <div class="form-actions">
+            <button type="button" class="btn btn-primary" [disabled]="savingService()" (click)="saveService()">
+              {{ savingService() ? 'Se salvează...' : (editingService.id ? 'Salvează modificările' : 'Adaugă serviciu') }}
+            </button>
+            @if (editingService.id) {
+              <button type="button" class="btn btn-ghost" (click)="newService()">Anulează editarea</button>
+            }
+          </div>
+        </div>
+
+        <div class="card">
+          <h3>Toate serviciile</h3>
+          @if (servicesLoading()) {
+            <p class="muted">Se încarcă...</p>
+          } @else {
+            <table>
+              <thead>
+                <tr>
+                  <th>Titlu</th>
+                  <th>Durată</th>
+                  <th>Stare</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (service of services(); track service.id) {
+                  <tr>
+                    <td>{{ service.title }}</td>
+                    <td>{{ service.durationMinutes }} min</td>
+                    <td>
+                      <span class="badge" [class]="service.active ? 'badge-confirmed' : 'badge-cancelled'">
+                        {{ service.active ? 'Activ' : 'Inactiv' }}
+                      </span>
+                    </td>
+                    <td class="row-actions">
+                      <button type="button" class="btn btn-ghost btn-sm" (click)="editService(service)">Editează</button>
+                      <button type="button" class="btn btn-ghost btn-sm" (click)="toggleActive(service)">
+                        {{ service.active ? 'Dezactivează' : 'Activează' }}
+                      </button>
+                      <button type="button" class="btn btn-danger btn-sm" (click)="deleteService(service)">Șterge</button>
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          }
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- ================= SCHEDULE ================= -->
+  @if (tab() === 'schedule') {
+    <div class="tab-panel card">
+      @if (scheduleError()) {
+        <p class="error-text">{{ scheduleError() }}</p>
+      }
+      @if (scheduleLoading()) {
+        <p class="muted">Se încarcă...</p>
+      } @else {
+        <table>
+          <thead>
+            <tr>
+              <th>Zi</th>
+              <th>Deschis</th>
+              <th>Ora start</th>
+              <th>Ora sfârșit</th>
+              <th>Durată slot (min)</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (day of schedule(); track day.dayOfWeek) {
+              <tr>
+                <td>{{ dayLabels[day.dayOfWeek] }}</td>
+                <td><input type="checkbox" [(ngModel)]="day.active" [name]="'active-' + day.dayOfWeek"></td>
+                <td><input type="time" [(ngModel)]="day.startTime" [name]="'start-' + day.dayOfWeek" [disabled]="!day.active"></td>
+                <td><input type="time" [(ngModel)]="day.endTime" [name]="'end-' + day.dayOfWeek" [disabled]="!day.active"></td>
+                <td><input type="number" min="5" step="5" [(ngModel)]="day.slotDurationMinutes" [name]="'slot-' + day.dayOfWeek" [disabled]="!day.active"></td>
+              </tr>
+            }
+          </tbody>
+        </table>
+
+        <div class="form-actions">
+          <button type="button" class="btn btn-primary" [disabled]="savingSchedule()" (click)="saveSchedule()">
+            {{ savingSchedule() ? 'Se salvează...' : 'Salvează programul' }}
+          </button>
+          @if (scheduleSaved()) {
+            <span class="success-text">Salvat!</span>
+          }
+        </div>
+      }
+    </div>
+  }
+
+  <!-- ================= APPOINTMENTS ================= -->
+  @if (tab() === 'appointments') {
+    <div class="tab-panel card">
+      @if (appointmentsError()) {
+        <p class="error-text">{{ appointmentsError() }}</p>
+      }
+      @if (appointmentsLoading()) {
+        <p class="muted">Se încarcă...</p>
+      } @else if (appointments().length === 0) {
+        <p class="muted">Nu există programări.</p>
+      } @else {
+        <table>
+          <thead>
+            <tr>
+              <th>Pacient</th>
+              <th>Contact</th>
+              <th>Serviciu</th>
+              <th>Data</th>
+              <th>Interval</th>
+              <th>Stare</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (appointment of appointments(); track appointment.id) {
+              <tr>
+                <td>{{ appointment.patientName }}</td>
+                <td>{{ appointment.patientContact }}</td>
+                <td>{{ appointment.serviceTitle }}</td>
+                <td>{{ appointment.date }}</td>
+                <td>{{ appointment.startTime.slice(0, 5) }} - {{ appointment.endTime.slice(0, 5) }}</td>
+                <td><span class="badge" [class]="'badge-' + appointment.status.toLowerCase()">{{ appointment.status }}</span></td>
+                <td class="row-actions">
+                  <select [ngModel]="appointment.status"
+                          (ngModelChange)="setStatus(appointment, $event)"
+                          [disabled]="updatingAppointmentId() === appointment.id"
+                          [name]="'status-' + appointment.id">
+                    @for (status of statuses; track status) {
+                      <option [value]="status">{{ status }}</option>
+                    }
+                  </select>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      }
+    </div>
+  }
+</div>

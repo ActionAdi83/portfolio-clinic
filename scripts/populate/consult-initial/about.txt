@@ -1,0 +1,3 @@
+Consultație dermatologică inițială
+# durationMinutes: 30
+O evaluare completă a pielii, părului și unghiilor, cu discutarea istoricului medical și a oricăror afecțiuni sau îngrijorări actuale. Recomandată pentru orice pacient nou al clinicii.

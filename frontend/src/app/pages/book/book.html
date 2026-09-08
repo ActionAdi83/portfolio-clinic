@@ -1,0 +1,70 @@
+<div class="container">
+  <h1>Programează-te online</h1>
+
+  @if (loadingServices()) {
+    <p class="muted">Se încarcă serviciile...</p>
+  } @else {
+    <div class="booking-layout">
+      <div class="card">
+        <div class="form-row">
+          <label for="service">Serviciu</label>
+          <select id="service" name="service" [(ngModel)]="selectedServiceId" (ngModelChange)="onServiceOrDateChange()">
+            @for (service of services(); track service.id) {
+              <option [value]="service.id">{{ service.title }} ({{ service.durationMinutes }} min)</option>
+            }
+          </select>
+        </div>
+
+        <div class="form-row">
+          <label for="date">Data</label>
+          <input id="date" name="date" type="date" [(ngModel)]="selectedDate" (ngModelChange)="onServiceOrDateChange()">
+        </div>
+
+        <div class="form-row">
+          <label>Interval disponibil</label>
+          @if (loadingSlots()) {
+            <p class="muted">Se încarcă sloturile...</p>
+          } @else if (slots().length === 0) {
+            <p class="muted">Nu există intervale disponibile în această zi.</p>
+          } @else {
+            <div class="slot-grid">
+              @for (slot of slots(); track slot) {
+                <button type="button" class="slot"
+                        [class.selected]="slot === selectedSlot"
+                        (click)="selectSlot(slot)">
+                  {{ slot.slice(0, 5) }}
+                </button>
+              }
+            </div>
+          }
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>Datele tale</h3>
+        <div class="form-row">
+          <label for="patientName">Nume complet</label>
+          <input id="patientName" name="patientName" type="text" [(ngModel)]="patientName">
+        </div>
+        <div class="form-row">
+          <label for="patientContact">Email sau telefon de contact</label>
+          <input id="patientContact" name="patientContact" type="text" [(ngModel)]="patientContact">
+        </div>
+
+        @if (error()) {
+          <p class="error-text">{{ error() }}</p>
+        }
+        @if (success()) {
+          <p class="success-text">{{ success() }}</p>
+          <button type="button" class="btn btn-ghost" (click)="goToAccount()">Vezi programările mele</button>
+        }
+
+        <button type="button" class="btn btn-primary"
+                [disabled]="!selectedSlot || !patientName || !patientContact || booking()"
+                (click)="confirmBooking()">
+          {{ booking() ? 'Se salvează...' : 'Confirmă programarea' }}
+        </button>
+      </div>
+    </div>
+  }
+</div>

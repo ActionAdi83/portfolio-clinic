@@ -1,0 +1,74 @@
+# Local dev stack: MongoDB + backend + frontend.
+#
+#   cp .env.example .env      # then edit if needed
+#   docker compose up --build
+#
+# Frontend  http://localhost:4201
+# Backend   http://localhost:8081/api
+# Mongo     mongodb://localhost:27018/clinic
+#
+# Keycloak is NOT part of this compose file — this project shares Keycloak
+# with the sibling fanvote stack rather than running its own. Point
+# KEYCLOAK_ISSUER_URI (backend) and the frontend's keycloak.config.ts / .env
+# equivalent at fanvote's Keycloak (http://localhost:8080) with a "clinic"
+# realm imported, or leave it unconfigured: the public pages (/, /services)
+# work fine without it, only /book, /account and /admin need a real realm.
+#
+# Ports are offset from the fanvote stack's (27017/8090/4200) so both can run
+# on the same machine at once: 27018/8081/4201.
+
+services:
+  mongo:
+    image: mongo:8.3
+    container_name: clinic-mongo
+    restart: unless-stopped
+    ports:
+      - "27018:27017" # exposed so Compass / mongosh on the host can reach it
+    volumes:
+      - clinic-mongo-data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping').ok"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+    networks: [clinic]
+
+  backend:
+    build:
+      context: ./backend
+    container_name: clinic-backend
+    restart: unless-stopped
+    environment:
+      SPRING_DATA_MONGODB_URI: mongodb://mongo:27017/${MONGO_DB:-clinic}
+      SPRING_DATA_MONGODB_DATABASE: ${MONGO_DB:-clinic}
+      KEYCLOAK_ISSUER_URI: ${KEYCLOAK_ISSUER_URI:-http://localhost:8080/realms/clinic}
+      CORS_ALLOWED_ORIGIN: ${CORS_ALLOWED_ORIGIN:-http://localhost:4201}
+      SERVER_PORT: 8081
+    ports:
+      - "8081:8081"
+    depends_on:
+      mongo:
+        condition: service_healthy
+    networks: [clinic]
+
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        # Baked into the browser bundle at build time — see frontend/Dockerfile.
+        API_URL: ${FRONTEND_API_URL:-http://localhost:8081}
+        KEYCLOAK_URL: ${FRONTEND_KEYCLOAK_URL:-http://localhost:8080}
+    container_name: clinic-frontend
+    restart: unless-stopped
+    ports:
+      - "4201:80"
+    depends_on:
+      - backend
+    networks: [clinic]
+
+networks:
+  clinic:
+
+volumes:
+  clinic-mongo-data:

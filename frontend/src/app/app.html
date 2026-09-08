@@ -1,0 +1,36 @@
+<header class="site-header">
+  <nav class="site-nav">
+    <a routerLink="/" class="brand">
+      <span class="brand-mark">✚</span>
+      <span class="brand-name">DermaCare</span>
+    </a>
+
+    <div class="nav-links">
+      <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}">Acasă</a>
+      <a routerLink="/services" routerLinkActive="active">Servicii</a>
+      <a routerLink="/book" routerLinkActive="active">Programează-te</a>
+      @if (authenticated) {
+        <a routerLink="/account" routerLinkActive="active">Contul meu</a>
+      }
+      @if (authenticated && isAdmin) {
+        <a routerLink="/admin" routerLinkActive="active">Admin</a>
+      }
+    </div>
+
+    <div class="nav-auth">
+      @if (authenticated) {
+        <button type="button" class="btn btn-ghost" (click)="logout()">Deconectare</button>
+      } @else {
+        <button type="button" class="btn btn-primary" (click)="login()">Autentificare</button>
+      }
+    </div>
+  </nav>
+</header>
+
+<main>
+  <router-outlet></router-outlet>
+</main>
+
+<footer class="site-footer">
+  <p>DermaCare — proiect demonstrativ (portfolio). Nu este o clinică reală.</p>
+</footer>

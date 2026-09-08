@@ -1,0 +1,42 @@
+.booking-layout {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr;
+  gap: 1.5rem;
+  align-items: start;
+  margin-top: 1.5rem;
+}
+
+.slot-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(70px, 1fr));
+  gap: 0.5rem;
+}
+
+.slot {
+  padding: 0.5rem 0.4rem;
+  border-radius: 8px;
+  border: 1px solid var(--color-border);
+  background: #fff;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.slot:hover {
+  border-color: var(--color-primary);
+}
+
+.slot.selected {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+  color: #fff;
+}
+
+.success-text {
+  color: var(--color-success);
+  font-weight: 600;
+}
+
+@media (max-width: 800px) {
+  .booking-layout { grid-template-columns: 1fr; }
+}

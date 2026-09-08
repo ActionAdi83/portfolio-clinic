@@ -1,0 +1,3 @@
+Dermatoscopie (mapare aluni)
+# durationMinutes: 30
+Examinare digitală a alunițelor și leziunilor pigmentare cu dermatoscopul, pentru depistarea precoce a modificărilor suspecte. Recomandată anual, mai ales pentru pacienții cu multe alunițe sau istoric familial.
