@@ -7,6 +7,7 @@ import { AppointmentApi } from '../../services/appointment.service';
 import { MedicalServiceDTO } from '../../entities/medical-service';
 import { DAYS_OF_WEEK, DAY_LABELS, ScheduleDayDTO } from '../../entities/schedule-day';
 import { AppointmentDTO, AppointmentStatus } from '../../entities/appointment';
+import { imageUrl } from '../../util/media';
 
 type AdminTab = 'services' | 'schedule' | 'appointments';
 
@@ -49,6 +50,9 @@ export class AdminPage implements OnInit {
   servicesError = signal<string | null>(null);
   editingService: MedicalServiceDTO = { ...EMPTY_SERVICE };
   savingService = signal(false);
+  uploadingImage = signal(false);
+  imageUploadError = signal<string | null>(null);
+  readonly imageUrl = imageUrl;
 
   // --- Schedule -----------------------------------------------------------
   readonly schedule = signal<ScheduleDayDTO[]>([]);
@@ -91,10 +95,36 @@ export class AdminPage implements OnInit {
 
   editService(service: MedicalServiceDTO): void {
     this.editingService = { ...service };
+    this.imageUploadError.set(null);
   }
 
   newService(): void {
     this.editingService = { ...EMPTY_SERVICE };
+    this.imageUploadError.set(null);
+  }
+
+  onServiceImageSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    input.value = ''; // lets the same file be picked again later
+    if (!file) return;
+
+    this.imageUploadError.set(null);
+    this.uploadingImage.set(true);
+    this.serviceApi.uploadImage(file).subscribe({
+      next: ({ url }) => {
+        this.editingService.imageUrl = url;
+        this.uploadingImage.set(false);
+      },
+      error: () => {
+        this.imageUploadError.set('Poza nu a putut fi încărcată.');
+        this.uploadingImage.set(false);
+      },
+    });
+  }
+
+  removeServiceImage(): void {
+    this.editingService.imageUrl = '';
   }
 
   saveService(): void {

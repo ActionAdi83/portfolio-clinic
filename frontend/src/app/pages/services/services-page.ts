@@ -2,6 +2,7 @@ import { Component, OnInit, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { MedicalServiceApi } from '../../services/medical-service.service';
 import { MedicalServiceDTO } from '../../entities/medical-service';
+import { imageUrl } from '../../util/media';
 
 @Component({
   selector: 'app-services-page',
@@ -16,6 +17,7 @@ export class ServicesPage implements OnInit {
   readonly services = signal<MedicalServiceDTO[]>([]);
   readonly loading = signal(true);
   readonly error = signal<string | null>(null);
+  readonly imageUrl = imageUrl;
 
   ngOnInit(): void {
     this.api.listActive().subscribe({

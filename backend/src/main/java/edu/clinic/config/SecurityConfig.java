@@ -59,8 +59,9 @@ public class SecurityConfig {
 
                         // Public browsing: the homepage and the service catalogue need to be
                         // readable by a visitor deciding whether to book, before they have an
-                        // account.
+                        // account. Service photos ride along the same rule.
                         .requestMatchers(HttpMethod.GET, "/api/services").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/services/images/**").permitAll()
 
                         // Available slots reveal only busy/free, never who holds a slot — see
                         // AppointmentController — so this is safe to leave public. Letting an

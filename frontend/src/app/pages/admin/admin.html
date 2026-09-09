@@ -26,8 +26,20 @@
             <textarea id="svc-desc" rows="3" [(ngModel)]="editingService.description" name="description" [disabled]="!isAdmin"></textarea>
           </div>
           <div class="form-row">
-            <label for="svc-image">URL imagine (opțional)</label>
-            <input id="svc-image" type="text" [(ngModel)]="editingService.imageUrl" name="imageUrl" [disabled]="!isAdmin">
+            <label for="svc-image">Poză (opțional)</label>
+            <input id="svc-image" type="file" accept="image/*" [disabled]="!isAdmin || uploadingImage()" (change)="onServiceImageSelected($event)">
+            @if (uploadingImage()) {
+              <p class="muted">Se încarcă...</p>
+            }
+            @if (imageUploadError()) {
+              <p class="error-text">{{ imageUploadError() }}</p>
+            }
+            @if (editingService.imageUrl) {
+              <div class="image-preview">
+                <img [src]="imageUrl(editingService.imageUrl)" alt="">
+                <button type="button" class="btn btn-ghost btn-sm" [disabled]="!isAdmin" (click)="removeServiceImage()">Șterge poza</button>
+              </div>
+            }
           </div>
           <div class="form-row">
             <label for="svc-duration">Durată (minute)</label>

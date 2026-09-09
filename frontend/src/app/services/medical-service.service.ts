@@ -30,4 +30,11 @@ export class MedicalServiceApi {
   delete(id: string): Observable<void> {
     return this.http.delete<void>(`${this.base}admin/services/${id}`);
   }
+
+  /** Uploads a photo from disk; the returned `url` is what goes into imageUrl. */
+  uploadImage(file: File): Observable<{ id: string; url: string }> {
+    const form = new FormData();
+    form.append('file', file);
+    return this.http.post<{ id: string; url: string }>(`${this.base}admin/services/images`, form);
+  }
 }

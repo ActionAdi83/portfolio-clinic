@@ -13,7 +13,7 @@
       @for (service of services(); track service.id) {
         <div class="card service-card">
           @if (service.imageUrl) {
-            <img [src]="service.imageUrl" [alt]="service.title" class="service-image">
+            <img [src]="imageUrl(service.imageUrl)" [alt]="service.title" class="service-image">
           } @else {
             <div class="service-image placeholder" aria-hidden="true">✚</div>
           }
