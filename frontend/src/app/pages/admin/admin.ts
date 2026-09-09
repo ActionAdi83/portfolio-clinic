@@ -1,5 +1,6 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import Keycloak from 'keycloak-js';
 import { MedicalServiceApi } from '../../services/medical-service.service';
 import { ScheduleApi } from '../../services/schedule.service';
 import { AppointmentApi } from '../../services/appointment.service';
@@ -28,6 +29,13 @@ export class AdminPage implements OnInit {
   private readonly serviceApi = inject(MedicalServiceApi);
   private readonly scheduleApi = inject(ScheduleApi);
   private readonly appointmentApi = inject(AppointmentApi);
+  private readonly keycloak = inject(Keycloak);
+
+  /** Same claim the backend enforces on — non-admins get a read-only view. */
+  get isAdmin(): boolean {
+    const roles: string[] = (this.keycloak?.tokenParsed as any)?.realm_access?.roles ?? [];
+    return roles.includes('clinic-admin');
+  }
 
   readonly dayOrder = DAYS_OF_WEEK;
   readonly dayLabels = DAY_LABELS;

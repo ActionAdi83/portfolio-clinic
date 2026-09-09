@@ -15,39 +15,41 @@
       }
 
       <div class="admin-layout">
-        <div class="card">
-          <h3>{{ editingService.id ? 'Editează serviciul' : 'Serviciu nou' }}</h3>
-          <div class="form-row">
-            <label for="svc-title">Titlu</label>
-            <input id="svc-title" type="text" [(ngModel)]="editingService.title" name="title">
+        @if (isAdmin) {
+          <div class="card">
+            <h3>{{ editingService.id ? 'Editează serviciul' : 'Serviciu nou' }}</h3>
+            <div class="form-row">
+              <label for="svc-title">Titlu</label>
+              <input id="svc-title" type="text" [(ngModel)]="editingService.title" name="title">
+            </div>
+            <div class="form-row">
+              <label for="svc-desc">Descriere</label>
+              <textarea id="svc-desc" rows="3" [(ngModel)]="editingService.description" name="description"></textarea>
+            </div>
+            <div class="form-row">
+              <label for="svc-image">URL imagine (opțional)</label>
+              <input id="svc-image" type="text" [(ngModel)]="editingService.imageUrl" name="imageUrl">
+            </div>
+            <div class="form-row">
+              <label for="svc-duration">Durată (minute)</label>
+              <input id="svc-duration" type="number" min="5" step="5" [(ngModel)]="editingService.durationMinutes" name="durationMinutes">
+            </div>
+            <div class="form-row checkbox-row">
+              <label class="inline">
+                <input type="checkbox" [(ngModel)]="editingService.active" name="active">
+                Activ (vizibil public)
+              </label>
+            </div>
+            <div class="form-actions">
+              <button type="button" class="btn btn-primary" [disabled]="savingService()" (click)="saveService()">
+                {{ savingService() ? 'Se salvează...' : (editingService.id ? 'Salvează modificările' : 'Adaugă serviciu') }}
+              </button>
+              @if (editingService.id) {
+                <button type="button" class="btn btn-ghost" (click)="newService()">Anulează editarea</button>
+              }
+            </div>
           </div>
-          <div class="form-row">
-            <label for="svc-desc">Descriere</label>
-            <textarea id="svc-desc" rows="3" [(ngModel)]="editingService.description" name="description"></textarea>
-          </div>
-          <div class="form-row">
-            <label for="svc-image">URL imagine (opțional)</label>
-            <input id="svc-image" type="text" [(ngModel)]="editingService.imageUrl" name="imageUrl">
-          </div>
-          <div class="form-row">
-            <label for="svc-duration">Durată (minute)</label>
-            <input id="svc-duration" type="number" min="5" step="5" [(ngModel)]="editingService.durationMinutes" name="durationMinutes">
-          </div>
-          <div class="form-row checkbox-row">
-            <label class="inline">
-              <input type="checkbox" [(ngModel)]="editingService.active" name="active">
-              Activ (vizibil public)
-            </label>
-          </div>
-          <div class="form-actions">
-            <button type="button" class="btn btn-primary" [disabled]="savingService()" (click)="saveService()">
-              {{ savingService() ? 'Se salvează...' : (editingService.id ? 'Salvează modificările' : 'Adaugă serviciu') }}
-            </button>
-            @if (editingService.id) {
-              <button type="button" class="btn btn-ghost" (click)="newService()">Anulează editarea</button>
-            }
-          </div>
-        </div>
+        }
 
         <div class="card">
           <h3>Toate serviciile</h3>
@@ -74,11 +76,13 @@
                       </span>
                     </td>
                     <td class="row-actions">
-                      <button type="button" class="btn btn-ghost btn-sm" (click)="editService(service)">Editează</button>
-                      <button type="button" class="btn btn-ghost btn-sm" (click)="toggleActive(service)">
-                        {{ service.active ? 'Dezactivează' : 'Activează' }}
-                      </button>
-                      <button type="button" class="btn btn-danger btn-sm" (click)="deleteService(service)">Șterge</button>
+                      @if (isAdmin) {
+                        <button type="button" class="btn btn-ghost btn-sm" (click)="editService(service)">Editează</button>
+                        <button type="button" class="btn btn-ghost btn-sm" (click)="toggleActive(service)">
+                          {{ service.active ? 'Dezactivează' : 'Activează' }}
+                        </button>
+                        <button type="button" class="btn btn-danger btn-sm" (click)="deleteService(service)">Șterge</button>
+                      }
                     </td>
                   </tr>
                 }
@@ -113,23 +117,25 @@
             @for (day of schedule(); track day.dayOfWeek) {
               <tr>
                 <td>{{ dayLabels[day.dayOfWeek] }}</td>
-                <td><input type="checkbox" [(ngModel)]="day.active" [name]="'active-' + day.dayOfWeek"></td>
-                <td><input type="time" [(ngModel)]="day.startTime" [name]="'start-' + day.dayOfWeek" [disabled]="!day.active"></td>
-                <td><input type="time" [(ngModel)]="day.endTime" [name]="'end-' + day.dayOfWeek" [disabled]="!day.active"></td>
-                <td><input type="number" min="5" step="5" [(ngModel)]="day.slotDurationMinutes" [name]="'slot-' + day.dayOfWeek" [disabled]="!day.active"></td>
+                <td><input type="checkbox" [(ngModel)]="day.active" [name]="'active-' + day.dayOfWeek" [disabled]="!isAdmin"></td>
+                <td><input type="time" [(ngModel)]="day.startTime" [name]="'start-' + day.dayOfWeek" [disabled]="!isAdmin || !day.active"></td>
+                <td><input type="time" [(ngModel)]="day.endTime" [name]="'end-' + day.dayOfWeek" [disabled]="!isAdmin || !day.active"></td>
+                <td><input type="number" min="5" step="5" [(ngModel)]="day.slotDurationMinutes" [name]="'slot-' + day.dayOfWeek" [disabled]="!isAdmin || !day.active"></td>
               </tr>
             }
           </tbody>
         </table>
 
-        <div class="form-actions">
-          <button type="button" class="btn btn-primary" [disabled]="savingSchedule()" (click)="saveSchedule()">
-            {{ savingSchedule() ? 'Se salvează...' : 'Salvează programul' }}
-          </button>
-          @if (scheduleSaved()) {
-            <span class="success-text">Salvat!</span>
-          }
-        </div>
+        @if (isAdmin) {
+          <div class="form-actions">
+            <button type="button" class="btn btn-primary" [disabled]="savingSchedule()" (click)="saveSchedule()">
+              {{ savingSchedule() ? 'Se salvează...' : 'Salvează programul' }}
+            </button>
+            @if (scheduleSaved()) {
+              <span class="success-text">Salvat!</span>
+            }
+          </div>
+        }
       }
     </div>
   }
@@ -169,7 +175,7 @@
                 <td class="row-actions">
                   <select [ngModel]="appointment.status"
                           (ngModelChange)="setStatus(appointment, $event)"
-                          [disabled]="updatingAppointmentId() === appointment.id"
+                          [disabled]="!isAdmin || updatingAppointmentId() === appointment.id"
                           [name]="'status-' + appointment.id">
                     @for (status of statuses; track status) {
                       <option [value]="status">{{ status }}</option>

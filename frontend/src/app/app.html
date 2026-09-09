@@ -12,8 +12,11 @@
       @if (authenticated) {
         <a routerLink="/account" routerLinkActive="active">Contul meu</a>
       }
-      @if (authenticated && isAdmin) {
+      @if (authenticated) {
         <a routerLink="/admin" routerLinkActive="active">Admin</a>
+        @if (!isAdmin) {
+          <span class="read-only-badge">Doar citire</span>
+        }
       }
     </div>
 
